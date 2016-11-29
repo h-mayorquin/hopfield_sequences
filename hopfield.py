@@ -45,8 +45,14 @@ class Hopfield():
         """
         Updates the network state of all the neurons at the same time
         """
+
+        if self.sigma < 0.001:
+            noise = 0
+        else:
+            noise = np.random.normal(0, scale=self.sigma, size=self.n_dim)
+
         # Linear part
-        self.h = np.dot(self.w, self.s) + np.random.normal(0, scale=self.sigma, size=self.n_dim)
+        self.h = np.dot(self.w, self.s) + noise
         # Non-linear part
         # self.state = sigmoid_logistic(self.state)
         self.s = np.sign(self.h)
@@ -57,12 +63,17 @@ class Hopfield():
         """
         # Generate random number
         i = np.random.randint(self.n_dim, size=1)[0]
-        print('i', i)
         # Linear
         # self.state = np.dot(self.state, self.w[i, ...])
-        self.h[i] = np.dot(self.w[i, ...], self.s) + np.random.normal(0, scale=self.sigma)
+
+        if self.sigma < 0.001:
+            noise = 0
+        else:
+            noise = np.random.normal(loc=self.sigma)
+
+        self.h[i] = np.dot(self.w[i, ...], self.s) + noise
         # Non-linear
-        self.s[i] = np.sign(self.s[i])
+        self.s[i] = np.sign(self.h[i])
 
     def calculate_overlap(self):
         self.m = np.mean(self.s * self.list_of_patterns, axis=1)
