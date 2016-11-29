@@ -6,18 +6,22 @@ class Hopfield():
     The hopfield network in the simplest case of AMIT book in attractor neural network
     """
 
-    def __init__(self, n_dim=3):
+    def __init__(self, n_dim=3, T=0):
 
         self.n_dim = n_dim
         self.s = np.sign(np.random.normal(size=n_dim))
         self.h = np.zeros(n_dim)
+
+        # Noise parameters
+        self.T = T
+        self.sigma = T / (2 * np.sqrt(2))
 
         self.list_of_patterns = None
         self.w = None
         self.m = None
         self.state_distance = None
 
-    def train(self, list_of_patterns):
+    def train(self, list_of_patterns, normalize=False):
         """
         Implements the Hebbian learning rule
 
@@ -31,14 +35,18 @@ class Hopfield():
         for pattern in list_of_patterns:
             self.w += np.outer(pattern, pattern)
 
-        self.w *= (1.0 / self.n_dim)
+        if normalize:
+            self.w *= (1.0 / self.n_dim)
+
+        # zeros in the diagonal
+        self.w[np.diag_indices_from(self.w)] = 0
 
     def update_sync(self):
         """
         Updates the network state of all the neurons at the same time
         """
         # Linear part
-        self.h = np.dot(self.w, self.s)
+        self.h = np.dot(self.w, self.s) + np.random.normal(0, scale=self.sigma, size=self.n_dim)
         # Non-linear part
         # self.state = sigmoid_logistic(self.state)
         self.s = np.sign(self.h)
@@ -48,10 +56,11 @@ class Hopfield():
         Updates the network state one neuron at a time
         """
         # Generate random number
-        i = np.random.randint(self.n_dim, size=1)
+        i = np.random.randint(self.n_dim, size=1)[0]
+        print('i', i)
         # Linear
         # self.state = np.dot(self.state, self.w[i, ...])
-        self.h[i] = np.dot(self.w[i, ...], self.s)
+        self.h[i] = np.dot(self.w[i, ...], self.s) + np.random.normal(0, scale=self.sigma)
         # Non-linear
         self.s[i] = np.sign(self.s[i])
 
