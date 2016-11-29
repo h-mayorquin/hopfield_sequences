@@ -1,25 +1,28 @@
 import numpy as np
 from hopfield import Hopfield
 
+n_dim = 10
+n_store = 2
+list_of_patterns = [np.sign(np.random.normal(size=n_dim)) for i in range(n_store)]
 
-s0 = np.array([1, 0])
-s1 = np.array([0, 1])
+nn = Hopfield(n_dim=n_dim)
+nn.train(list_of_patterns)
 
-s = np.array([0.9, 0.1])
+print('state', nn.s)
+print('overlap', nn.calculate_overlap())
+print('state distance', nn.calculate_state_distance())
 
-network = Hopfield(s)
+print('Simulating')
 
-list_of_patterns = [s0, s1]
-w = network.train(list_of_patterns)
-
-print(w)
-print(network.w)
-print('Running')
-
-N = 5
+N = 100
 for i in range(N):
-    print('state', network.state)
-    print('update', network.update())
-    print('normalize', network.normalize())
-    print('state distance', network.calculate_state_distance())
+    nn.update_async()
+
+
+print('Done')
+print('state', nn.s)
+print('overlap', nn.calculate_overlap())
+print('state distance', nn.calculate_state_distance())
+
+
 
