@@ -6,26 +6,29 @@ class Hopfield():
     The hopfield network in the simplest case of AMIT book in attractor neural network
     """
 
-    def __init__(self, n_dim=3, T=0):
+    def __init__(self, n_dim=3, T=0, prng=np.random):
+
+        self.prng = prng
 
         self.n_dim = n_dim
-        self.s = np.sign(np.random.normal(size=n_dim))
+        self.s = np.sign(prng.normal(size=n_dim))
         self.h = np.zeros(n_dim)
 
         # Noise parameters
         self.T = T
-        self.sigma = T / (2 * np.sqrt(2))
+        self.sigma = T / (2 * np.sqrt(2))  # Check page 67 of Amit to see where does this comes from
 
         self.list_of_patterns = None
         self.w = None
         self.m = None
         self.state_distance = None
 
-    def train(self, list_of_patterns, normalize=False):
+    def train(self, list_of_patterns, normalize=True):
         """
         Implements the Hebbian learning rule
 
         :param list_of_patterns: This is a list with the desired parameters for equilibrum
+        normalize: normalizes the w matrix by its dimension
         :return: w  the weight matrix.
         """
 
@@ -41,6 +44,12 @@ class Hopfield():
         # zeros in the diagonal
         self.w[np.diag_indices_from(self.w)] = 0
 
+    def generate_random_patterns(self, n_store):
+
+        list_of_patterns = [np.sign(self.prng.normal(size=self.n_dim)) for i in range(n_store)]
+
+        return list_of_patterns
+
     def update_sync(self):
         """
         Updates the network state of all the neurons at the same time
@@ -49,7 +58,7 @@ class Hopfield():
         if self.sigma < 0.001:
             noise = 0
         else:
-            noise = np.random.normal(0, scale=self.sigma, size=self.n_dim)
+            noise = self.prng.normal(0, scale=self.sigma, size=self.n_dim)
 
         # Linear part
         self.h = np.dot(self.w, self.s) + noise
@@ -62,14 +71,14 @@ class Hopfield():
         Updates the network state one neuron at a time
         """
         # Generate random number
-        i = np.random.randint(self.n_dim, size=1)[0]
+        i = self.prng.randint(self.n_dim, size=1)[0]
         # Linear
         # self.state = np.dot(self.state, self.w[i, ...])
 
         if self.sigma < 0.001:
             noise = 0
         else:
-            noise = np.random.normal(loc=self.sigma)
+            noise = self.prng.normal(loc=self.sigma)
 
         self.h[i] = np.dot(self.w[i, ...], self.s) + noise
         # Non-linear
