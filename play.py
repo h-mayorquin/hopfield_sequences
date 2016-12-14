@@ -26,13 +26,13 @@ nn = HopfieldSequence(n_dim=n_dim, tau=tau, g_delay=2.0, T=T, prng=prng)
 nn.train(list_of_patterns, normalize=True)
 nn.train_delays(list_of_patterns_sequence, normalize=True)
 
-N = 50
+N = 70
 
 nn.s = np.copy(list_of_patterns[0])
 history = np.zeros((N, n_store))
 for i in range(N):
-    nn.update_sync()
-    # nn.update_async_random_sequence()
+    # nn.update_sync()
+    nn.update_async_random_sequence()
     # nn.update_async()
     history[i, :] = nn.calculate_overlap()
 

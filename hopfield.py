@@ -199,10 +199,27 @@ class HopfieldSequence():
     def update_async_random_sequence(self):
         random_sequence = self.prng.choice(self.n_dim, size=self.n_dim, replace=False)
         for i in random_sequence:
-            self.update_async(i)
+            self.update_async_one(i)
 
         self.s_history.appendleft(np.copy(self.s))
 
+    def update_async_one(self, i=None):
+
+        if i is None:
+            i = self.prng.randint(self.n_dim, size=1)[0]
+
+            # Linear
+            # self.state = np.dot(self.state, self.w[i, ...])
+
+        if self.sigma < 0.001:
+            noise = 0
+        else:
+            noise = self.prng.normal(loc=self.sigma)
+
+        self.h[i] = np.dot(self.w[i, ...], self.s) \
+                    + self.g_delay * np.dot(self.w_delay[i, ...], self.s_history[-1]) + noise
+        # Non-linear
+        self.s[i] = np.sign(self.h[i])
 
     def update_async(self, i=None):
         """
@@ -212,8 +229,8 @@ class HopfieldSequence():
         if i is None:
             i = self.prng.randint(self.n_dim, size=1)[0]
 
-        # Linear
-        # self.state = np.dot(self.state, self.w[i, ...])
+            # Linear
+            # self.state = np.dot(self.state, self.w[i, ...])
 
         if self.sigma < 0.001:
             noise = 0
@@ -221,7 +238,7 @@ class HopfieldSequence():
             noise = self.prng.normal(loc=self.sigma)
 
         self.h[i] = np.dot(self.w[i, ...], self.s) \
-                    + self.g_delay * np.dot(self.w_delay[i, ...], self.s_history.pop()) + noise
+                    + self.g_delay * np.dot(self.w_delay[i, ...], self.s_history[-1]) + noise
         # Non-linear
         self.s[i] = np.sign(self.h[i])
         self.s_history.appendleft(np.copy(self.s))
