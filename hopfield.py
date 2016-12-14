@@ -160,8 +160,10 @@ class HopfieldSequence():
         self.list_of_patterns_sequence = list_of_patterns
         self.w_delay = np.zeros((self.n_dim, self.n_dim))
 
-        for pattern in list_of_patterns:
-            self.w_delay += np.outer(pattern, pattern)
+        for index in range(len(list_of_patterns) - 1):
+            pattern1 = list_of_patterns[index + 1]
+            pattern2 = list_of_patterns[index]
+            self.w_delay += np.outer(pattern1, pattern2)
 
         if normalize:
             self.w_delay *= (1.0 / self.n_dim)
@@ -192,15 +194,24 @@ class HopfieldSequence():
         # Non-linear part
         # self.state = sigmoid_logistic(self.state)
         self.s = np.sign(self.h)
-        self.s_history.appendleft(self.s)
+        self.s_history.appendleft(np.copy(self.s))
+
+    def update_async_random_sequence(self):
+        random_sequence = self.prng.choice(self.n_dim, size=self.n_dim, replace=False)
+        for i in random_sequence:
+            self.update_async(i)
+
+        self.s_history.appendleft(np.copy(self.s))
 
 
-    def update_async(self):
+    def update_async(self, i=None):
         """
         Updates the network state one neuron at a time
         """
         # Generate random number
-        i = self.prng.randint(self.n_dim, size=1)[0]
+        if i is None:
+            i = self.prng.randint(self.n_dim, size=1)[0]
+
         # Linear
         # self.state = np.dot(self.state, self.w[i, ...])
 
@@ -213,13 +224,12 @@ class HopfieldSequence():
                     + self.g_delay * np.dot(self.w_delay[i, ...], self.s_history.pop()) + noise
         # Non-linear
         self.s[i] = np.sign(self.h[i])
-        self.s_history.appendleft(self.s)
+        self.s_history.appendleft(np.copy(self.s))
 
     def calculate_overlap(self):
         self.m = np.mean(self.s * self.list_of_patterns, axis=1)
 
         return self.m
-
 
     def calculate_state_distance(self):
         """

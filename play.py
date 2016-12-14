@@ -4,12 +4,13 @@ import seaborn as sns
 
 from hopfield import Hopfield, HopfieldSequence
 
-prng = np.random.RandomState(seed=100)
+prng = np.random.RandomState(seed=101)
 
-n_dim = 10
-n_store = 5
+n_dim = 200
+n_store = 10
+q = 10
 T = 0.0
-tau = 10
+tau = 5
 
 
 if True:
@@ -19,20 +20,21 @@ else:
     for i in range(n_store):
         list_of_patterns[i][i] = 1
 
-list_of_patterns_sequence = list_of_patterns[:3]
+list_of_patterns_sequence = list_of_patterns[:q]
 
 nn = HopfieldSequence(n_dim=n_dim, tau=tau, g_delay=2.0, T=T, prng=prng)
 nn.train(list_of_patterns, normalize=True)
 nn.train_delays(list_of_patterns_sequence, normalize=True)
 
-N = 20
+N = 50
 
 nn.s = np.copy(list_of_patterns[0])
 history = np.zeros((N, n_store))
 for i in range(N):
-    nn.update_async()
+    nn.update_sync()
+    # nn.update_async_random_sequence()
+    # nn.update_async()
     history[i, :] = nn.calculate_overlap()
-
 
 # Plot
 if True:
