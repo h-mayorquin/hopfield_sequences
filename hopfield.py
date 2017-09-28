@@ -203,23 +203,6 @@ class HopfieldSequence():
 
         self.s_history.appendleft(np.copy(self.s))
 
-    def update_async_one(self, i=None):
-
-        if i is None:
-            i = self.prng.randint(self.n_dim, size=1)[0]
-
-            # Linear
-            # self.state = np.dot(self.state, self.w[i, ...])
-
-        if self.sigma < 0.001:
-            noise = 0
-        else:
-            noise = self.prng.normal(loc=self.sigma)
-
-        self.h[i] = np.dot(self.w[i, ...], self.s) \
-                    + self.g_delay * np.dot(self.w_delay[i, ...], self.s_history[-1]) + noise
-        # Non-linear
-        self.s[i] = np.sign(self.h[i])
 
     def update_async(self, i=None):
         """
@@ -228,9 +211,6 @@ class HopfieldSequence():
         # Generate random number
         if i is None:
             i = self.prng.randint(self.n_dim, size=1)[0]
-
-            # Linear
-            # self.state = np.dot(self.state, self.w[i, ...])
 
         if self.sigma < 0.001:
             noise = 0
@@ -321,14 +301,12 @@ class HopfieldDiff():
         """
 
         if self.sigma < 0.001:
-            noise = 0
+            noise = np.zeros(self.n_dim)
         else:
             noise = self.prng.normal(0, scale=self.sigma, size=self.n_dim)
 
-        aux = np.dot(self.w, np.tanh(self.s))
-        aux = np.ones(self.n_dim) * 2
+        aux = np.sign(np.dot(self.w, self.s))
         self.s += (self.dt / self.tau_m) * (aux - self.s + noise)
-
 
     def calculate_state_distance(self):
         """
@@ -338,10 +316,16 @@ class HopfieldDiff():
         :return: A state distance vector with the distance between
          the actual state of the system and all the stored patterns
         """
-
-        self.state_distance = np.ones(len(self.list_of_patterns))
+        n_patterns = len(self.list_of_patterns)
+        self.state_distance = np.ones((2, n_patterns))
 
         for index, pattern in enumerate(self.list_of_patterns):
-            self.state_distance[index] = np.linalg.norm(self.s - pattern)
+            self.state_distance[0, index] = np.linalg.norm(self.s - pattern)
+            self.state_distance[1, index] = np.linalg.norm(self.s + pattern)
 
         return self.state_distance
+
+    def calculate_overlap(self):
+        self.m = np.mean(self.s * self.list_of_patterns, axis=1)
+
+        return self.m
